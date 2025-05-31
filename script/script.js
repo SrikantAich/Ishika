@@ -1,22 +1,26 @@
-// --- Language dropdown logic ---
+// === Dropdown and Language Logic ===
 const dropdowns = document.querySelectorAll(".dropdown-container"),
   inputLanguageDropdown = document.querySelector("#input-language"),
-  outputLanguageDropdown = document.querySelector("#output-language");
+  outputLanguageDropdown = document.querySelector("#output-language"),
+  inputTextElem = document.querySelector("#input-text"),
+  outputTextElem = document.querySelector("#output-text"),
+  swapBtn = document.querySelector(".swap-position"),
+  errorMessageElem = document.getElementById("error-message"),
+  loadingIndicator = document.getElementById("loading-indicator"),
+  loadingText = document.getElementById("loading-text"),
+  charsElem = document.getElementById("input-chars");
 
-// Populate dropdown options
+// Populate dropdowns
 function populateDropdown(dropdown, options) {
   dropdown.querySelector("ul").innerHTML = "";
   options.forEach((option) => {
     const li = document.createElement("li");
-    const title = option.name + " (" + option.native + ")";
-    li.innerHTML = title;
+    li.innerHTML = `${option.name} (${option.native})`;
     li.dataset.value = option.code;
     li.classList.add("option");
     dropdown.querySelector("ul").appendChild(li);
   });
 }
-
-// Populate language dropdowns with your languages array (make sure 'languages' is defined globally)
 populateDropdown(inputLanguageDropdown, languages);
 populateDropdown(outputLanguageDropdown, languages);
 
@@ -34,7 +38,7 @@ function selectDropdownOption(dropdown, code) {
   }
 }
 
-// Braille detection function - returns true if >70% of chars are Braille Unicode
+// Braille detection function
 function isBraille(text) {
   if (!text) return false;
   const brailleCharsCount = [...text].filter(
@@ -44,7 +48,7 @@ function isBraille(text) {
   return ratio > 0.7;
 }
 
-// Add event listeners for toggling dropdown open/close and option selection
+// Dropdown event listeners
 dropdowns.forEach((dropdown) => {
   dropdown.addEventListener("click", () => {
     dropdown.classList.toggle("active");
@@ -63,20 +67,18 @@ dropdowns.forEach((dropdown) => {
     selected.innerHTML = item.innerHTML;
     selected.dataset.value = item.dataset.value;
 
-    // If Braille is selected in this dropdown, set the other dropdown to English
+    // If Braille is selected, set the other dropdown to English
     if (item.dataset.value === "braille") {
       let otherDropdown = dropdown === inputLanguageDropdown ? outputLanguageDropdown : inputLanguageDropdown;
       selectDropdownOption(otherDropdown, "en");
     }
 
     translate();
-
-    // Close dropdown after selection
     dropdown.classList.remove("active");
   });
 });
 
-// Close dropdowns if clicked outside
+// Close dropdowns on outside click
 document.addEventListener("click", (e) => {
   dropdowns.forEach((dropdown) => {
     if (!dropdown.contains(e.target)) {
@@ -85,23 +87,21 @@ document.addEventListener("click", (e) => {
   });
 });
 
-const swapBtn = document.querySelector(".swap-position"),
-  inputLanguage = inputLanguageDropdown.querySelector(".selected"),
-  outputLanguage = outputLanguageDropdown.querySelector(".selected"),
-  inputTextElem = document.querySelector("#input-text"),
-  outputTextElem = document.querySelector("#output-text");
-
+// Swap languages and text
 swapBtn.addEventListener("click", () => {
-  // Swap language UI and values
-  const tempHtml = inputLanguage.innerHTML;
-  inputLanguage.innerHTML = outputLanguage.innerHTML;
-  outputLanguage.innerHTML = tempHtml;
+  const inputLang = inputLanguageDropdown.querySelector(".selected");
+  const outputLang = outputLanguageDropdown.querySelector(".selected");
 
-  const tempValue = inputLanguage.dataset.value;
-  inputLanguage.dataset.value = outputLanguage.dataset.value;
-  outputLanguage.dataset.value = tempValue;
+  // Swap UI
+  const tempHtml = inputLang.innerHTML;
+  inputLang.innerHTML = outputLang.innerHTML;
+  outputLang.innerHTML = tempHtml;
 
-  // Swap input/output text values
+  const tempValue = inputLang.dataset.value;
+  inputLang.dataset.value = outputLang.dataset.value;
+  outputLang.dataset.value = tempValue;
+
+  // Swap text
   const tempInputText = inputTextElem.value;
   inputTextElem.value = outputTextElem.value;
   outputTextElem.value = tempInputText;
@@ -109,7 +109,7 @@ swapBtn.addEventListener("click", () => {
   translate();
 });
 
-// Braille mappings
+// === Braille Logic ===
 const englishToBrailleMap = {
   a: "\u2801", b: "\u2803", c: "\u2809", d: "\u2819", e: "\u2811",
   f: "\u280B", g: "\u281B", h: "\u2813", i: "\u280A", j: "\u281A",
@@ -124,7 +124,6 @@ const brailleToEnglishMap = {};
 for (const [key, value] of Object.entries(englishToBrailleMap)) {
   brailleToEnglishMap[value] = key;
 }
-
 function englishToBraille(text) {
   text = text.toLowerCase();
   let result = "";
@@ -133,7 +132,6 @@ function englishToBraille(text) {
   }
   return result;
 }
-
 function brailleToEnglish(text) {
   let result = "";
   for (let char of text) {
@@ -142,78 +140,200 @@ function brailleToEnglish(text) {
   return result;
 }
 
-// Make translate async so we can await it in speech recognition result handler
+// === Speak output text (AUTOMATIC) ===
+function speakOutputText() {
+  const text = outputTextElem.value;
+  if (!text) return;
+  // Get the output language code
+  const lang = outputLanguageDropdown.querySelector(".selected").dataset.value || "en";
+  const utterance = new SpeechSynthesisUtterance(text);
+  // Set the utterance language
+  utterance.lang = lang;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+
+// === Translation Logic ===
 async function translate() {
+  errorMessageElem && (errorMessageElem.style.display = "none");
   const inputText = inputTextElem.value;
   let inputLang = inputLanguageDropdown.querySelector(".selected").dataset.value;
   const outputLang = outputLanguageDropdown.querySelector(".selected").dataset.value;
 
-  // Auto-detect Braille input if needed
+  // Auto-detect Braille input
   if (inputLang !== "braille" && isBraille(inputText)) {
     inputLang = "braille";
     selectDropdownOption(inputLanguageDropdown, "braille");
     selectDropdownOption(outputLanguageDropdown, "en");
   }
 
+  // Local Braille/English translation
   if (inputLang === "braille" && outputLang === "en") {
     outputTextElem.value = brailleToEnglish(inputText);
+    speakOutputText();
     return;
   }
-
   if (inputLang === "en" && outputLang === "braille") {
     outputTextElem.value = englishToBraille(inputText);
+    speakOutputText();
     return;
   }
-
   if (inputLang === "braille" && outputLang === "braille") {
     outputTextElem.value = inputText;
+    speakOutputText();
     return;
   }
 
-  // For all other languages, use Google Translate API
+  // Google Translate API
   if (!inputText.trim()) {
     outputTextElem.value = "";
     return;
   }
-
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${inputLang}&tl=${outputLang}&dt=t&q=${encodeURIComponent(
-    inputText
-  )}`;
-
   try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${inputLang}&tl=${outputLang}&dt=t&q=${encodeURIComponent(inputText)}`;
     const response = await fetch(url);
+    if (!response.ok) throw new Error("Translation failed.");
     const json = await response.json();
     outputTextElem.value = json[0].map((item) => item[0]).join("");
+    speakOutputText();
   } catch (error) {
-    console.error(error);
+    errorMessageElem.textContent = "Translation failed. Please try again.";
+    errorMessageElem.style.display = "block";
   }
 }
 
+// Input events
 inputTextElem.addEventListener("input", () => {
   if (inputTextElem.value.length > 5000) {
     inputTextElem.value = inputTextElem.value.slice(0, 5000);
   }
+  charsElem && (charsElem.textContent = inputTextElem.value.length);
   translate();
 });
 
-// --- Accessibility: Speak on hover feature ---
+// === File Upload Logic ===
+const uploadInput = document.getElementById("upload-document");
+const uploadTitle = document.getElementById("upload-title");
+uploadInput && uploadInput.addEventListener("change", async function () {
+  const file = this.files[0];
+  if (!file) return;
+  loadingIndicator && (loadingIndicator.style.display = "block");
+  errorMessageElem && (errorMessageElem.style.display = "none");
+  try {
+    let text = "";
+    if (file.type === "application/pdf") {
+      const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(item => item.str).join(" ") + "\n";
+      }
+    } else if (
+      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.name.endsWith(".docx")
+    ) {
+      const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+      text = result.value;
+    } else if (file.type.startsWith("text/") || file.name.endsWith(".txt")) {
+      text = await file.text();
+    } else {
+      throw new Error("Unsupported file type.");
+    }
+    inputTextElem.value = text.slice(0, 5000);
+    charsElem && (charsElem.textContent = inputTextElem.value.length);
+    translate();
+    uploadTitle && (uploadTitle.textContent = file.name);
+  } catch (err) {
+    errorMessageElem.textContent = "Could not read file: " + err.message;
+    errorMessageElem.style.display = "block";
+  } finally {
+    loadingIndicator && (loadingIndicator.style.display = "none");
+  }
+});
+
+// === Microphone Input (Speech Recognition) ===
+const micInput = document.getElementById("mic-input");
+const micTitle = document.getElementById("mic-title");
+let recognition, recognizing = false;
+if (micInput && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    recognizing = true;
+    micTitle && (micTitle.textContent = "Listening...");
+  };
+  recognition.onresult = (event) => {
+    recognizing = false;
+    micTitle && (micTitle.textContent = "Speak");
+    const transcript = event.results[0][0].transcript;
+    inputTextElem.value = transcript.slice(0, 5000);
+    charsElem && (charsElem.textContent = inputTextElem.value.length);
+    translate();
+  };
+  recognition.onerror = (event) => {
+    recognizing = false;
+    micTitle && (micTitle.textContent = "Speak");
+    errorMessageElem.textContent = "Speech recognition error: " + event.error;
+    errorMessageElem.style.display = "block";
+  };
+  recognition.onend = () => {
+    recognizing = false;
+    micTitle && (micTitle.textContent = "Speak");
+  };
+
+  micInput.parentElement.addEventListener("click", () => {
+    if (recognizing) {
+      recognition.stop();
+      micTitle && (micTitle.textContent = "Speak");
+    } else {
+      recognition.lang = inputLanguageDropdown.querySelector(".selected").dataset.value || "en-US";
+      recognition.start();
+    }
+  });
+} else if (micTitle) {
+  micTitle.textContent = "Not supported";
+  micInput && (micInput.parentElement.style.pointerEvents = "none");
+}
+
+// === Output Actions (Download, Copy, Speak) ===
+document.getElementById("download-btn")?.addEventListener("click", () => {
+  const blob = new Blob([outputTextElem.value], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "translation.txt";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("copyBtn")?.addEventListener("click", () => {
+  navigator.clipboard.writeText(outputTextElem.value);
+});
+
+document.getElementById("speak-btn")?.addEventListener("click", () => {
+  speakOutputText();
+});
+
+// === Speak on Hover Accessibility ===
 function speakText(text) {
   if (!text) return;
   const utterance = new SpeechSynthesisUtterance(text);
-  window.speechSynthesis.cancel(); // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
-
-// Add hover listeners to all relevant elements
 function addSpeakOnHover() {
-  // Select all interactive elements: buttons, checkboxes, textareas, labels, and anything with role="button" or aria-label
   const elements = document.querySelectorAll(
     'button, input[type="checkbox"], textarea, label, [role="button"], [aria-label]'
   );
-
   elements.forEach(elem => {
     elem.addEventListener('mouseenter', () => {
-      // Prefer aria-label, then title, then innerText
       const textToSpeak =
         elem.getAttribute('aria-label') ||
         elem.getAttribute('title') ||
@@ -225,6 +345,4 @@ function addSpeakOnHover() {
     });
   });
 }
-
-// Run this after DOM is loaded and language dropdowns are populated
 window.addEventListener('DOMContentLoaded', addSpeakOnHover);
