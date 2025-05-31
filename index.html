@@ -10,15 +10,10 @@
     <title>Language Translator</title>
     <style>
       @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
 
-      /* Container for toggles */
       .mode {
         display: flex;
         align-items: center;
@@ -26,7 +21,6 @@
         padding: 10px 20px;
       }
 
-      /* Toggle track */
       .toggle-track {
         position: relative;
         width: 50px;
@@ -39,7 +33,6 @@
         flex-shrink: 0;
       }
 
-      /* Hidden checkbox covers full toggle track for clicks */
       .toggle-checkbox {
         position: absolute;
         inset: 0;
@@ -51,7 +44,6 @@
         z-index: 2;
       }
 
-      /* Toggle thumb */
       .toggle-thumb {
         position: absolute;
         top: 2px;
@@ -64,30 +56,16 @@
         z-index: 1;
       }
 
-      /* Move toggle thumb on checked */
       .toggle-checkbox:checked + .toggle-thumb {
         transform: translateX(26px);
       }
 
-      /* Assistance toggle thumb colors */
-      #assist-toggle + .toggle-thumb {
-        background-color: #d93025; /* Red when OFF */
-      }
+      #assist-toggle + .toggle-thumb { background-color: #d93025; }
+      #assist-toggle:checked + .toggle-thumb { background-color: #34a853; }
 
-      #assist-toggle:checked + .toggle-thumb {
-        background-color: #34a853; /* Green when ON */
-      }
+      #dark-mode-btn + .toggle-thumb { background-color: #f0c419; }
+      #dark-mode-btn:checked + .toggle-thumb { background-color: #555; }
 
-      /* Optional: Dark mode toggle thumb colors */
-      #dark-mode-btn + .toggle-thumb {
-        background-color: #f0c419; /* yellow sun color */
-      }
-
-      #dark-mode-btn:checked + .toggle-thumb {
-        background-color: #555; /* darker for night */
-      }
-
-      /* Label styling */
       label.toggle {
         display: flex;
         align-items: center;
@@ -97,7 +75,6 @@
         cursor: pointer;
       }
 
-      /* Dark mode icons */
       .dark-mode-icons {
         position: absolute;
         width: 18px;
@@ -105,38 +82,25 @@
         top: 3px;
       }
 
-      .sun-icon {
-        left: 4px;
-      }
-
-      .moon-icon {
-        right: 4px;
-      }
+      .sun-icon { left: 4px; }
+      .moon-icon { right: 4px; }
     </style>
   </head>
   <body>
     <div class="mode">
       <!-- Dark Mode Toggle -->
-      <label class="toggle" for="dark-mode-btn" aria-label="Toggle dark mode">
+      <label class="toggle" for="dark-mode-btn" aria-label="Enable or disable dark mode" title="Toggle dark mode">
         <div class="toggle-track">
           <input type="checkbox" class="toggle-checkbox" id="dark-mode-btn" />
           <span class="toggle-thumb"></span>
-          <img
-            src="images/sun.png"
-            alt="Sun Icon"
-            class="dark-mode-icons sun-icon"
-          />
-          <img
-            src="images/moon.png"
-            alt="Moon Icon"
-            class="dark-mode-icons moon-icon"
-          />
+          <img src="images/sun.png" alt="Sun Icon" class="dark-mode-icons sun-icon" />
+          <img src="images/moon.png" alt="Moon Icon" class="dark-mode-icons moon-icon" />
         </div>
         <span>Dark Mode</span>
       </label>
 
       <!-- Assistance Toggle -->
-      <label class="toggle" for="assist-toggle" aria-label="Toggle assistance mode">
+      <label class="toggle" for="assist-toggle" aria-label="Enable or disable assistance mode" title="Toggle assistance mode">
         <div class="toggle-track">
           <input type="checkbox" class="toggle-checkbox" id="assist-toggle" />
           <span class="toggle-thumb"></span>
@@ -148,19 +112,18 @@
     <div class="container">
       <div class="card input-wrapper">
         <div class="from">
-          <span class="heading">From :</span>
+          <span class="heading" title="Translate from">From :</span>
           <div class="dropdown-container" id="input-language">
-            <div class="dropdown-toggle">
+            <div class="dropdown-toggle" title="Select input language" aria-label="Select input language">
               <ion-icon name="globe-outline"></ion-icon>
-              <span class="selected" data-value="auto">Auto Detect</span>
+              <span class="selected" data-value="auto" title="Auto Detect">Auto Detect</span>
               <ion-icon name="chevron-down-outline"></ion-icon>
             </div>
             <ul class="dropdown-menu">
-              <li data-value="braille" tabindex="0" role="option" aria-selected="false">
+              <li data-value="braille" tabindex="0" role="option" aria-selected="false" title="Braille" aria-label="Select Braille language">
                 <ion-icon name="eye-outline" style="vertical-align: middle;"></ion-icon>
                 Braille
               </li>
-              <!-- Other language options injected here -->
             </ul>
           </div>
         </div>
@@ -171,14 +134,16 @@
             cols="30"
             rows="10"
             placeholder="Enter your text here"
+            title="Enter your text here"
+            aria-label="Input text area"
           ></textarea>
-          <div class="chars"><span id="input-chars">0</span> / 5000</div>
+          <div class="chars" title="Character count"><span id="input-chars">0</span> / 5000</div>
         </div>
 
         <div class="card-bottom" style="display: flex; flex-direction: column; gap: 10px;">
           <div>
             <p>Or choose your document!</p>
-            <label for="upload-document">
+            <label for="upload-document" title="Upload document" aria-label="Upload a document to translate">
               <span id="upload-title">Choose File</span>
               <ion-icon name="cloud-upload-outline"></ion-icon>
               <input type="file" id="upload-document" hidden />
@@ -187,7 +152,7 @@
 
           <div>
             <p>Or speak your input!</p>
-            <label for="mic-input">
+            <label for="mic-input" title="Click to speak input" aria-label="Speak input using microphone">
               <span id="mic-title">Speak</span>
               <ion-icon name="mic-outline"></ion-icon>
               <input type="button" id="mic-input" hidden />
@@ -198,15 +163,19 @@
 
       <div
         id="error-message"
-        style="color: #d93025; font-weight: 600; margin: 10px 0 15px; display: none; text-align: center; min-height: 1.2em;"
         role="alert"
         aria-live="assertive"
+        style="color: #d93025; font-weight: 600; margin: 10px 0 15px; display: none; text-align: center; min-height: 1.2em;"
+        title="Error message"
+        aria-label="Error message area"
       ></div>
 
       <div
         id="loading-indicator"
         style="display: none; margin-bottom: 15px; text-align: center;"
         aria-live="polite"
+        title="Loading indicator"
+        aria-label="File processing indicator"
       >
         <div
           class="spinner"
@@ -217,23 +186,21 @@
       </div>
 
       <div class="center">
-        <div class="swap-position">
+        <div class="swap-position" title="Swap languages" aria-label="Swap input and output languages">
           <ion-icon name="swap-horizontal-outline"></ion-icon>
         </div>
       </div>
 
       <div class="card output-wrapper">
         <div class="to">
-          <span class="heading">To :</span>
+          <span class="heading" title="Translate to">To :</span>
           <div class="dropdown-container" id="output-language">
-            <div class="dropdown-toggle">
+            <div class="dropdown-toggle" title="Select output language" aria-label="Select output language">
               <ion-icon name="globe-outline"></ion-icon>
-              <span class="selected" data-value="en">English</span>
+              <span class="selected" data-value="en" title="English">English</span>
               <ion-icon name="chevron-down-outline"></ion-icon>
             </div>
-            <ul class="dropdown-menu">
-              <!-- Other language options injected here -->
-            </ul>
+            <ul class="dropdown-menu"></ul>
           </div>
         </div>
 
@@ -243,31 +210,29 @@
           rows="10"
           placeholder="Translated text will appear here"
           disabled
+          title="Translated output"
+          aria-label="Translated output"
         ></textarea>
 
         <div class="card-bottom" style="display: flex; align-items: center; gap: 10px;">
           <p style="margin: 0;">Download as a document!</p>
-          <button
-            id="download-btn"
-            type="button"
-            style="display: flex; align-items: center; gap: 5px;"
-          >
+          <button id="download-btn" type="button" title="Download translation as a document" aria-label="Download the translated text as a document">
             <span>Download</span>
             <ion-icon name="cloud-download-outline"></ion-icon>
           </button>
 
-          <button id="copyBtn" type="button">Copy to Clipboard</button>
+          <button id="copyBtn" type="button" title="Copy translated text to clipboard" aria-label="Copy the translated text to clipboard">
+            Copy to Clipboard
+          </button>
 
           <button
             id="speak-btn"
             type="button"
-            aria-label="Speak translated text"
+            aria-label="Read translated text aloud to the user"
+            title="Speak translated text"
             style="padding: 6px 12px; font-size: 0.9rem; cursor: pointer;"
           >
-            <ion-icon
-              name="volume-high-outline"
-              style="vertical-align: middle;"
-            ></ion-icon>
+            <ion-icon name="volume-high-outline" style="vertical-align: middle;"></ion-icon>
             <span style="margin-left: 6px;">Speak</span>
           </button>
         </div>
@@ -278,6 +243,5 @@
     <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
     <script src="script/languages.js"></script>
     <script src="script/script.js"></script>
-    
   </body>
 </html>
