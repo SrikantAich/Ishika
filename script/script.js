@@ -345,4 +345,25 @@ function addSpeakOnHover() {
     });
   });
 }
+const darkModeToggle = document.getElementById('dark-mode-btn');
+
+if (darkModeToggle) {
+  // On toggle change, add/remove dark-mode class on body
+  darkModeToggle.addEventListener('change', function() {
+    if (this.checked) {
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('darkMode', 'enabled');
+    } else {
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('darkMode', 'disabled');
+    }
+  });
+
+  // On page load, restore user's preference
+  if (localStorage.getItem('darkMode') === 'enabled') {
+    darkModeToggle.checked = true;
+    document.body.classList.add('dark-mode');
+  }
+}
+
 window.addEventListener('DOMContentLoaded', addSpeakOnHover);

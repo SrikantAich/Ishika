@@ -390,3 +390,28 @@ label:focus-visible,
 .toggle-checkbox:checked + .toggle-track {
   background-color: var(--primary-color);
 }
+body.dark-mode {
+  background: #181818;
+  color: #f3f3f3;
+}
+body.dark-mode .card {
+  background: #232323;
+  color: #f3f3f3;
+}
+body.dark-mode textarea,
+body.dark-mode input,
+body.dark-mode .dropdown-container {
+  background: #232323;
+  color: #f3f3f3;
+  border-color: #444;
+}
+body.dark-mode .card-bottom,
+body.dark-mode .heading {
+  color: #f3f3f3;
+}
+body.dark-mode .toggle-track {
+  background: #333;
+}
+body.dark-mode .toggle-thumb {
+  background: #555;
+}
