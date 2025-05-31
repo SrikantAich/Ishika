@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="styles/style.css" />
+    <title>Language Translator</title>
+    <style>
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Container for toggles */
+      .mode {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        padding: 10px 20px;
+      }
+
+      /* Toggle track */
+      .toggle-track {
+        position: relative;
+        width: 50px;
+        height: 24px;
+        background: #ccc;
+        border-radius: 12px;
+        padding: 2px;
+        cursor: pointer;
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+
+      /* Hidden checkbox covers full toggle track for clicks */
+      .toggle-checkbox {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        margin: 0;
+        cursor: pointer;
+        z-index: 2;
+      }
+
+      /* Toggle thumb */
+      .toggle-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+        z-index: 1;
+      }
+
+      /* Move toggle thumb on checked */
+      .toggle-checkbox:checked + .toggle-thumb {
+        transform: translateX(26px);
+      }
+
+      /* Assistance toggle thumb colors */
+      #assist-toggle + .toggle-thumb {
+        background-color: #d93025; /* Red when OFF */
+      }
+
+      #assist-toggle:checked + .toggle-thumb {
+        background-color: #34a853; /* Green when ON */
+      }
+
+      /* Optional: Dark mode toggle thumb colors */
+      #dark-mode-btn + .toggle-thumb {
+        background-color: #f0c419; /* yellow sun color */
+      }
+
+      #dark-mode-btn:checked + .toggle-thumb {
+        background-color: #555; /* darker for night */
+      }
+
+      /* Label styling */
+      label.toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        user-select: none;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      /* Dark mode icons */
+      .dark-mode-icons {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        top: 3px;
+      }
+
+      .sun-icon {
+        left: 4px;
+      }
+
+      .moon-icon {
+        right: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mode">
+      <!-- Dark Mode Toggle -->
+      <label class="toggle" for="dark-mode-btn" aria-label="Toggle dark mode">
+        <div class="toggle-track">
+          <input type="checkbox" class="toggle-checkbox" id="dark-mode-btn" />
+          <span class="toggle-thumb"></span>
+          <img
+            src="images/sun.png"
+            alt="Sun Icon"
+            class="dark-mode-icons sun-icon"
+          />
+          <img
+            src="images/moon.png"
+            alt="Moon Icon"
+            class="dark-mode-icons moon-icon"
+          />
+        </div>
+        <span>Dark Mode</span>
+      </label>
+
+      <!-- Assistance Toggle -->
+      <label class="toggle" for="assist-toggle" aria-label="Toggle assistance mode">
+        <div class="toggle-track">
+          <input type="checkbox" class="toggle-checkbox" id="assist-toggle" />
+          <span class="toggle-thumb"></span>
+        </div>
+        <span>Assistance</span>
+      </label>
+    </div>
+
+    <div class="container">
+      <div class="card input-wrapper">
+        <div class="from">
+          <span class="heading">From :</span>
+          <div class="dropdown-container" id="input-language">
+            <div class="dropdown-toggle">
+              <ion-icon name="globe-outline"></ion-icon>
+              <span class="selected" data-value="auto">Auto Detect</span>
+              <ion-icon name="chevron-down-outline"></ion-icon>
+            </div>
+            <ul class="dropdown-menu">
+              <li data-value="braille" tabindex="0" role="option" aria-selected="false">
+                <ion-icon name="eye-outline" style="vertical-align: middle;"></ion-icon>
+                Braille
+              </li>
+              <!-- Other language options injected here -->
+            </ul>
+          </div>
+        </div>
+
+        <div class="text-area">
+          <textarea
+            id="input-text"
+            cols="30"
+            rows="10"
+            placeholder="Enter your text here"
+          ></textarea>
+          <div class="chars"><span id="input-chars">0</span> / 5000</div>
+        </div>
+
+        <div class="card-bottom" style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <p>Or choose your document!</p>
+            <label for="upload-document">
+              <span id="upload-title">Choose File</span>
+              <ion-icon name="cloud-upload-outline"></ion-icon>
+              <input type="file" id="upload-document" hidden />
+            </label>
+          </div>
+
+          <div>
+            <p>Or speak your input!</p>
+            <label for="mic-input">
+              <span id="mic-title">Speak</span>
+              <ion-icon name="mic-outline"></ion-icon>
+              <input type="button" id="mic-input" hidden />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="error-message"
+        style="color: #d93025; font-weight: 600; margin: 10px 0 15px; display: none; text-align: center; min-height: 1.2em;"
+        role="alert"
+        aria-live="assertive"
+      ></div>
+
+      <div
+        id="loading-indicator"
+        style="display: none; margin-bottom: 15px; text-align: center;"
+        aria-live="polite"
+      >
+        <div
+          class="spinner"
+          aria-hidden="true"
+          style="margin: 0 auto 5px; width: 36px; height: 36px; border: 4px solid #ccc; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite;"
+        ></div>
+        <span id="loading-text" style="font-weight: 600;">Processing file...</span>
+      </div>
+
+      <div class="center">
+        <div class="swap-position">
+          <ion-icon name="swap-horizontal-outline"></ion-icon>
+        </div>
+      </div>
+
+      <div class="card output-wrapper">
+        <div class="to">
+          <span class="heading">To :</span>
+          <div class="dropdown-container" id="output-language">
+            <div class="dropdown-toggle">
+              <ion-icon name="globe-outline"></ion-icon>
+              <span class="selected" data-value="en">English</span>
+              <ion-icon name="chevron-down-outline"></ion-icon>
+            </div>
+            <ul class="dropdown-menu">
+              <!-- Other language options injected here -->
+            </ul>
+          </div>
+        </div>
+
+        <textarea
+          id="output-text"
+          cols="30"
+          rows="10"
+          placeholder="Translated text will appear here"
+          disabled
+        ></textarea>
+
+        <div class="card-bottom" style="display: flex; align-items: center; gap: 10px;">
+          <p style="margin: 0;">Download as a document!</p>
+          <button
+            id="download-btn"
+            type="button"
+            style="display: flex; align-items: center; gap: 5px;"
+          >
+            <span>Download</span>
+            <ion-icon name="cloud-download-outline"></ion-icon>
+          </button>
+
+          <button id="copyBtn" type="button">Copy to Clipboard</button>
+
+          <button
+            id="speak-btn"
+            type="button"
+            aria-label="Speak translated text"
+            style="padding: 6px 12px; font-size: 0.9rem; cursor: pointer;"
+          >
+            <ion-icon
+              name="volume-high-outline"
+              style="vertical-align: middle;"
+            ></ion-icon>
+            <span style="margin-left: 6px;">Speak</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+    <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+    <script src="script/languages.js"></script>
+    <script src="script/script.js"></script>
+    
+  </body>
+</html>
